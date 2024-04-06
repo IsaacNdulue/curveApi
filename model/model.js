@@ -11,6 +11,9 @@ const studentSchema = new mongoose.Schema({
     location: {
         type:String,
     },
+    mark:{
+        type:String
+    },
     time:{
         type:Date,
         default:Date.now

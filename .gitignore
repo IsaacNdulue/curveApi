@@ -1,2 +1,6 @@
 node_modules
 .env
+// const options = { timeZone: 'Africa/Lagos', hours:'numeric', minutes:'numeric'}; // Set timezone to Nigeria
+// const currentTime = new Date().toLocaleString('en-US', options); // Adjust locale as needed
+// const watermarkText = `${currentTime}\nLocation: ${userLocation}`;
+// Extract relevant information from locationData
