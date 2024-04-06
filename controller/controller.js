@@ -12,10 +12,10 @@ exports.studentPro = async (req, res) => {
         const ipAddress = req.ip; // Assuming this gives the IP address
         console.log(ipAddress)
         // Use a service to get location based on IP address
-        const response = await axios.get(`https://ipinfo.io/${ipAddress}/json`);
+        const response = await axios.get(`https://freegeoip.app/json/${ipAddress}`);
         const locationData = response.data;
-        
-        
+        // https://freegeoip.app/json/{ip-address}
+        // https://ipinfo.io/${ipAddress}/json
         // Extract user's exact location
         const userLocation = `${locationData.city}, ${locationData.region}`; 
       
