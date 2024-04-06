@@ -11,22 +11,35 @@ exports.studentPro = async (req, res) => {
         const ipAddress = req.ip; // Assuming this gives the IP address
 
         // Use a service to get location based on IP address
-        const locationData = await axios.get(`http://ip-api.com/json/${ipAddress}`);
-        console.log(locationData.data)
-        const userLocation = `${locationData.data.city}, ${locationData.data.country}`;
 
-        // Generate the watermark text with the current time and user's location
-        const watermarkText = new Date().toLocaleString() + " - Location: " + userLocation;
+const locationData = await axios.get(`http://ip-api.com/json/${ipAddress}`);
+console.log(locationData.data);
+const userLocation = `${locationData.data.city}`;
 
-        // Upload the image to Cloudinary with watermark transformation
-        const result = await cloudinary.uploader.upload(file, {
-            transformation: [
-                { width: 400, height: 400, gravity: "face", crop: "crop" }, // Adjust size and cropping as needed
-                { overlay: { font_family: "Arial", font_size: 40, text: watermarkText }, gravity: "north_east", y: 10, x: 10 } // Watermark with current time and location
-            ],
-            folder: "curveApi", 
-            resource_type: 'auto'
-        });
+// Generate the watermark text with the current time and user's location
+const currentTime = new Date().toLocaleString();
+const watermarkText = `${currentTime}\nLocation: ${userLocation}`;
+
+// Upload the image to Cloudinary with watermark transformation
+const result = await cloudinary.uploader.upload(file, {
+    transformation: [
+        { width: 400, height: 400, gravity: "face", crop: "crop" }, // Adjust size and cropping as needed
+        { 
+            overlay: { 
+                font_family: "Arial", 
+                font_size: 40, 
+                text: watermarkText 
+            }, 
+            gravity: "north_east", 
+            y: 10, 
+            x: 10 
+        } // Watermark with current time and location
+    ],
+    folder: "curveApi", 
+    resource_type: 'auto'
+});
+
+        
 
         // Create a student record in the database with the uploaded image URL
         const profile = await student.create({
