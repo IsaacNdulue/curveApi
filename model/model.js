@@ -12,6 +12,9 @@ const studentSchema = new mongoose.Schema({
         type:String,
     },
     mark:{
+        type:Array
+    },
+    suggestedScore:{
         type:String
     },
     time:{

@@ -1,4 +1,4 @@
-const student = require('../model/model');
+const studentModel = require('../model/model');
 const cloudinary = require('../utility/cloudinary')
 const axios = require('axios'); // For making HTTP requests
 
@@ -12,13 +12,13 @@ exports.studentPro = async (req, res) => {
         const ipAddress = req.ip; // Assuming this gives the IP address
         console.log(ipAddress)
         // Use a service to get location based on IP address
-        const response = await axios.get(`https://freegeoip.app/json/${ipAddress}`);
+        const response = await axios.get(`http://ip-api.com/json/${ipAddress}`);
         const locationData = response.data;
         // https://freegeoip.app/json/{ip-address}
         // https://ipinfo.io/${ipAddress}/json
         // Extract user's exact location
-        const userLocation = `${locationData.city}, ${locationData.region}`; 
-      
+        const userLocation = `${locationData.city}, ${locationData.country}`; 
+     
         
         // Generate the watermark text with the current time and user's location
         const options = { timeZone: 'Africa/Lagos', hour: 'numeric', minute: 'numeric' };
@@ -37,11 +37,33 @@ exports.studentPro = async (req, res) => {
         } else if (currentHour > 10 || (currentHour === 10 && currentMinute >= 0)) {
             mark = 0;
         }
+        const id = req.params.id
 
-        // Upload the image to Cloudinary with watermark transformation
+        const student = await studentModel.findById(id);
+            //This suggested score is the suggested weekly score
+        let suggestedScore = 0;
+        
+        if (student) {
+            const totalMarks = student.mark.reduce((sum, mark) => sum + mark, 0);
+        
+            if (totalMarks >= 60) {
+                suggestedScore = 20;
+            } else if (totalMarks >= 55) {
+                suggestedScore = 18; 
+            } else if (totalMarks >= 50) {
+                suggestedScore = 15;
+            } else if (totalMarks >= 40) {
+                suggestedScore = 10;
+            } else {
+                suggestedScore = 5;
+            }
+        }
+        
+        console.log(suggestedScore); 
+        // i used Transformation for the watermarking 
         const result = await cloudinary.uploader.upload(file, {
             transformation: [
-                { width: 400, height: 400, gravity: "face", crop: "crop" }, // Adjust size and cropping as needed
+                { width: 400, height: 400, gravity: "face", crop: "crop" }, // Adjust size and cropping 
                 { 
                     overlay: { 
                         font_family: "Arial", 
@@ -56,13 +78,13 @@ exports.studentPro = async (req, res) => {
             folder: "curveApi", 
             resource_type: 'auto'
         });
-
-        // Create a student record in the database with the uploaded image URL
-        const profile = await student.create({
+            //creating the profile
+        const profile = await studentModel.create({
             fullName,
             stack,
             mark,
-            profileImage: result.secure_url // Assuming 'profileImage' is the field in your student model for storing image URLs
+            suggestedScore,
+            profileImage: result.secure_url  
         });
 
         // Send success response
@@ -80,7 +102,23 @@ exports.studentPro = async (req, res) => {
 
 
 
+exports.deleteImage = async (req, res) => {
+    try {
+        const { imageUrl } = req.body; // Extract imageUrl from request body
 
+        // Extract public ID from the image URL
+        const publicId = imageUrl.split('/').pop().split('.')[0];
+
+        // Delete the image from Cloudinary
+        await cloudinary.uploader.destroy(publicId);
+
+        return res.status(200).json({ message: 'Image deleted successfully from Cloudinary.' });
+    } catch (error) {
+        // Handle errors
+        console.error('Error deleting image from Cloudinary:', error.message);
+        return res.status(500).json({ message: 'Error deleting image from Cloudinary.' });
+    }
+};
 
 // exports.studentPro = async (req, res) => {
 //     try {
